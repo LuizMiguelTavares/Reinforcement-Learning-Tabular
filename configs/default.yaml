@@ -1,0 +1,31 @@
+run_name: "qlearning_50x50"
+
+environment:
+  width: 50
+  height: 50
+  obstacle_density: 0.22
+  obstacle_mode: "cluster"
+  seed: 42
+  cluster_size: 5
+  allow_diagonal: true
+  reward_goal: 100.0
+  reward_obstacle: -10.0
+  reward_step: -0.01
+  shaping: "euclidean"              # null | "euclidean" | "manhattan"
+  max_steps: 1000
+  ensure_solvable: true
+
+agent:
+  algorithm: "qlearning"
+  alpha: 0.1
+  gamma: 0.99
+  seed: 42
+
+training:
+  num_episodes: 50000
+  epsilon_start: 1.0
+  epsilon_end: 0.05
+  checkpoint_every: 10000
+  print_every: 1000
+  flush_every: 100
+  resume: false
