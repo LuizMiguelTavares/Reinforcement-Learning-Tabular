@@ -178,8 +178,16 @@ class GridWorldEnv(gym.Env):
         dr, dc = self._actions[action]
         nr, nc = r + dr, c + dc
 
+        # Check if it's an illegal diagonal squeeze (corner cutting)
+        illegal_diagonal = False
+        if self._allow_diagonal and dr != 0 and dc != 0:
+            w1 = not self._in_bounds(r + dr, c) or self._grid[r + dr, c] == 1
+            w2 = not self._in_bounds(r, c + dc) or self._grid[r, c + dc] == 1
+            if w1 and w2:
+                illegal_diagonal = True
+
         # Check bounds and obstacles
-        if not self._in_bounds(nr, nc) or self._grid[nr, nc] == 1:
+        if not self._in_bounds(nr, nc) or self._grid[nr, nc] == 1 or illegal_diagonal:
             # Invalid move: agent stays in place, receives obstacle penalty
             next_pos = (r, c)
             reward = self._reward_obstacle
@@ -386,10 +394,20 @@ class GridWorldEnv(gym.Env):
             r, c = queue.popleft()
             for dr, dc in self._actions:
                 nr, nc = r + dr, c + dc
+                
+                # Check for illegal diagonal squeeze (corner cutting)
+                illegal_diagonal = False
+                if self._allow_diagonal and dr != 0 and dc != 0:
+                    w1 = not self._in_bounds(r + dr, c) or grid[r + dr, c] == 1
+                    w2 = not self._in_bounds(r, c + dc) or grid[r, c + dc] == 1
+                    if w1 and w2:
+                        illegal_diagonal = True
+
                 if (
                     self._in_bounds(nr, nc)
                     and (nr, nc) not in visited
                     and grid[nr, nc] == 0
+                    and not illegal_diagonal
                 ):
                     if (nr, nc) == goal:
                         return True
