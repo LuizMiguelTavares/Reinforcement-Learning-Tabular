@@ -137,24 +137,43 @@ def train(
     t_start = time.perf_counter()
     last_completed = start_episode
 
+    window_return_sum = 0.0
+    window_length_sum = 0
+    window_success_count = 0
+    window_collisions_sum = 0
+    window_episodes_with_collision = 0
+    window_episodes = 0
+
     try:
         for ep in range(start_episode + 1, start_episode + num_episodes + 1):
             ep_start = time.perf_counter()
 
             # ---- Run one episode ----
             obs, _info = env.reset()
+            action = agent.epsilon_greedy_action(obs)
             episode_return = 0.0
             episode_length = 0
+            episode_collisions = 0
             terminated = False
             truncated = False
 
             while not (terminated or truncated):
-                action = agent.epsilon_greedy_action(obs)
-                obs_next, reward, terminated, truncated, _info = env.step(action)
-                agent.update(obs, action, reward, obs_next, terminated)
+                obs_next, reward, terminated, truncated, info = env.step(action)
+                action_next = agent.epsilon_greedy_action(obs_next)
+                agent.update(obs, action, reward, obs_next, action_next, terminated)
                 obs = obs_next
+                action = action_next
                 episode_return += reward
                 episode_length += 1
+                episode_collisions += int(info.get("hit_obstacle", False))
+
+            window_return_sum += episode_return
+            window_length_sum += episode_length
+            window_success_count += int(terminated)
+            window_collisions_sum += episode_collisions
+            if episode_collisions > 0:
+                window_episodes_with_collision += 1
+            window_episodes += 1
 
             # ---- Epsilon decay ----
             agent.epsilon = _compute_epsilon(ep)
@@ -166,6 +185,7 @@ def train(
                 "episode_return": round(episode_return, 4),
                 "episode_length": episode_length,
                 "success": int(terminated),
+                "collisions": episode_collisions,
                 "epsilon": round(agent.epsilon, 6),
                 "episode_time_sec": round(ep_time, 6),
             })
@@ -176,14 +196,29 @@ def train(
             # ---- Print progress ----
             if ep % print_every == 0:
                 elapsed = time.perf_counter() - t_start
+                avg_return = window_return_sum / max(1, window_episodes)
+                avg_len = window_length_sum / max(1, window_episodes)
+                success_rate = (window_success_count / max(1, window_episodes)) * 100
+                avg_coll = window_collisions_sum / max(1, window_episodes)
+                coll_rate = (window_episodes_with_collision / max(1, window_episodes)) * 100
+
                 print(
                     f"Ep {ep:>7d}/{total_target} | "
-                    f"Return={episode_return:>8.2f} | "
-                    f"Len={episode_length:>4d} | "
-                    f"{'✓' if terminated else '✗'} | "
+                    f"AvgReturn={avg_return:>8.2f} | "
+                    f"AvgLen={avg_len:>6.1f} | "
+                    f"AvgColl={avg_coll:>5.1f} | "
+                    f"CollEp={coll_rate:>5.1f}% | "
+                    f"Success={success_rate:>5.1f}% | "
                     f"ε={agent.epsilon:.4f} | "
                     f"Time={elapsed:.1f}s"
                 )
+
+                window_return_sum = 0.0
+                window_length_sum = 0
+                window_success_count = 0
+                window_collisions_sum = 0
+                window_episodes_with_collision = 0
+                window_episodes = 0
 
             # ---- Periodic checkpoint ----
             if ep % checkpoint_every == 0:

@@ -27,6 +27,7 @@ class CSVLogger:
         "episode_return",
         "episode_length",
         "success",
+        "collisions",
         "epsilon",
         "episode_time_sec",
     ]

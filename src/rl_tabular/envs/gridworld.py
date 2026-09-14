@@ -187,11 +187,13 @@ class GridWorldEnv(gym.Env):
                 illegal_diagonal = True
 
         # Check bounds and obstacles
+        hit_obstacle = False
         if not self._in_bounds(nr, nc) or self._grid[nr, nc] == 1 or illegal_diagonal:
             # Invalid move: agent stays in place, receives obstacle penalty
             next_pos = (r, c)
             reward = self._reward_obstacle
             terminated = False
+            hit_obstacle = True
         elif (nr, nc) == self._goal:
             # Reached the goal
             next_pos = (nr, nc)
@@ -220,7 +222,9 @@ class GridWorldEnv(gym.Env):
         truncated = (not terminated) and (self._steps_taken >= self._max_steps)
 
         obs = self._rc_to_state(*self._agent_pos)
-        return obs, float(reward), terminated, truncated, self._get_info()
+        info = self._get_info()
+        info["hit_obstacle"] = hit_obstacle
+        return obs, float(reward), terminated, truncated, info
 
     def render(self) -> str | None:
         """Render the grid as ASCII text."""
