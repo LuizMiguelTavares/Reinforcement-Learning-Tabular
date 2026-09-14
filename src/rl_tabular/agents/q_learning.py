@@ -25,6 +25,7 @@ class QLearningAgent(TDAgent):
         a: int,
         r: float,
         s_next: int,
+        _: any,
         terminated: bool,
     ) -> None:
         """
@@ -49,4 +50,4 @@ class QLearningAgent(TDAgent):
         td_error = target - self.Q[s, a]
 
         # Update: Q(s, a) ← Q(s, a) + α δ
-        self.Q[s, a] += self.alpha * td_error
+        self.Q[s, a] = self.Q[s, a] + self.alpha * td_error

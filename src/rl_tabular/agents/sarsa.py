@@ -36,5 +36,10 @@ class SarsaAgent(TDAgent):
             terminated: True if the episode ended (goal reached).
                         When True, the bootstrap term is zero.
         """
-        # TODO: Implement the update rule here!
-        pass
+        if terminated:
+            target = r
+        else:
+            target = r + self.gamma * self.Q[s_next, a_next]
+
+        td_error = target - self.Q[s, a]
+        self.Q[s, a] = self.Q[s, a] + self.alpha * td_error

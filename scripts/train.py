@@ -14,7 +14,7 @@ from pathlib import Path
 
 import yaml
 
-from rl_tabular.agents import QLearningAgent
+from rl_tabular.agents import QLearningAgent, SarsaAgent
 from rl_tabular.envs.gridworld import GridWorldEnv
 from rl_tabular.training.runner import train
 
@@ -67,13 +67,28 @@ def main() -> None:
     print(f"Start: {env.start}, Goal: {env.goal}")
 
     # ---- Create agent ----
-    agent = QLearningAgent(
-        num_states=env.observation_space.n,
-        num_actions=env.action_space.n,
-        alpha=agent_cfg.get("alpha", 0.1),
-        gamma=agent_cfg.get("gamma", 0.99),
-        seed=agent_cfg.get("seed"),
-    )
+    if agent_cfg.get("algorithm") == "qlearning":
+        agent = QLearningAgent(
+            num_states=env.observation_space.n,
+            num_actions=env.action_space.n,
+            alpha=agent_cfg.get("alpha", 0.1),
+            gamma=agent_cfg.get("gamma", 0.99),
+            seed=agent_cfg.get("seed"),
+        )
+    elif agent_cfg.get("algorithm") == "sarsa":
+        agent = SarsaAgent(
+            num_states=env.observation_space.n,
+            num_actions=env.action_space.n,
+            alpha=agent_cfg.get("alpha", 0.1),
+            gamma=agent_cfg.get("gamma", 0.99),
+            seed=agent_cfg.get("seed"),
+        )
+    else:
+        raise ValueError(
+            f"Unknown algorithm: {agent_cfg.get('algorithm')!r}. "
+            "Choose 'qlearning' or 'sarsa'."
+        )
+
 
     # ---- Run training ----
     run_dir = Path("runs") / run_name
