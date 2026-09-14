@@ -1,22 +1,22 @@
-run_name: "qlearning_50x50"
+run_name: "sarsa_20x20"
 
 environment:
-  width: 50
-  height: 50
+  width: 20
+  height: 20
   obstacle_density: 0.22
   obstacle_mode: "cluster"
-  seed: 42
+  seed: 40
   cluster_size: 5
   allow_diagonal: true
   reward_goal: 100.0
   reward_obstacle: -10.0
-  reward_step: -0.01
-  shaping: "euclidean"              # null | "euclidean" | "manhattan"
+  reward_step: -1.0 
+  shaping: null              # null | "euclidean" | "manhattan"
   max_steps: 1000
   ensure_solvable: true
 
 agent:
-  algorithm: "qlearning"
+  algorithm: "sarsa"            # "qlearning" | "sarsa"
   alpha: 0.1
   gamma: 0.99
   seed: 42
